@@ -1,63 +1,75 @@
-# cloudera-for-cpd
-Cloudera Data Platform for IBM Cloud Pak for Data
-
-499K MAX FOR IMAGES!!!!
-
 # Virtualizing Cloudera Data using IBM Cloud Pak for Data
 
-The purpose of this code pattern is to highlight the ability of IBM Cloud Pak for Data to integrate with other market-leading data management platforms, such as Cloudera.
+The purpose of this article is to highlight the ability of IBM Cloud Pak for Data to integrate with other market-leading data management platforms, such as Cloudera.
 
-Due to the complexity of installing a Cloudera cluster, it is assumed the reader will already have access to a Cloudera instance. If not, you can still follow along and get insights into how integration is accomplished. has examples
+Due to the complexity of installing a Cloudera cluster, it is assumed the reader will already have access to a Cloudera instance. If not, you can still follow along and get insights into how integration can be accomplished.
 
-## Overview of technologies
+## Topics
+
+1. [Overview of technologies](#1-overview-of-technologies)
+1. [Overview of our Cloudera Data Platform and IBM Cloud Pak for Data clusters](#2-overview-of-our-cloudera-data-platform-and-ibm-cloud-pak-for-data-clusters)
+1. [Installing the IBM Execution Engine for Hadoop (HEE) on Cloudera Data Platform](#3-installing-the-ibm-execution-engine-for-hadoop-hee-on-cloudera-data-platform)
+1. [Use HEE to configure Cloudera Data Platform connections](#4-use-hee-to-configure-cloudera-data-platform-connections)
+    * [HDFS Connection](#-hdfs-connection)
+    * [Hive Connection](#-hive-connection)
+    * [Impala Connection](#-impala-connection)
+1. [Load data on Cloudera Data Platform](#5-load-data-on-cloudera-data-platform)
+1. [Load data on IBM Cloud Pak for Data](#6-load-data-on-ibm-cloud-pak-for-data)
+1. [Access Cloudera data from Jupyter notebook running on Cloud Pak for Data](#7-access-cloudera-data-from-jupyter-notebook-running-on-cloud-pak-for-data)
+1. [Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data](#8-use-data-virtualization-to-merge-data-from-cloudera-and-cloud-pak-for-data)
+1. [Build Cognos Analytics dashboard to visualize merged data](#9-build-cognos-analytics-dashboard-to-visualize-merged-data)
+
+## 1. Overview of technologies
 
 Let's start with some an overview of the technologies that we will be utilizing:
 
 ### Cloudera
 
-[Apache Hadoop](https://hadoop.apache.org/): Using a collection of open-source projects, Hadoop provides a framework for distributed processing of large data sets across clusters. Data is stored using the Hadoop distributed file system (HDFS) and processed using MapReduce.
-
 [Cloudera](https://www.cloudera.com/) is the most popular Hadoop distribution, providing additional enterprise level support such as security, compliance and governance. The Cloudera platform uses analytics and machine learning to yield insights from data through a secure connection.
 
-[Cloudera Manager]() provides administration of your Cloudera cluster, including operations for installation, upgrading, and host management and monitoring.
+* [Apache Hadoop](https://hadoop.apache.org/): Using a collection of open-source projects, Hadoop provides a framework for distributed processing of large data sets across clusters. Data is stored using the Hadoop distributed file system (HDFS) and processed using MapReduce.
 
-[Cloudera Data Platform]() (CDP) is Cloudera's solution for hybrid cloud and multi-cloud environments, making it easier for enterprises to run and move AI and analytics applications and data from one location to another. CDP offers cloud-native analytics for Data Engineering, Data Warehousing, and Machine Learning, running on public clouds as well as on-premises.
+* [Cloudera Manager]() provides administration of your Cloudera cluster, including operations for installation, upgrading, and host management and monitoring.
 
-[CDP Private Cloud]() built for hybrid cloud, connecting on-premises environments to public clouds. It provides a disaggregation of compute and storage, allowing for independent scaling of compute and storage clusters. Analytics running on containerized compute nodes, scalable object store, and a secure data lake.
+* [Cloudera Data Platform]() (CDP) is Cloudera's solution for hybrid cloud and multi-cloud environments, making it easier for enterprises to run and move AI and analytics applications and data from one location to another. CDP offers cloud-native analytics for Data Engineering, Data Warehousing, and Machine Learning, running on public clouds as well as on-premises.
 
-[Apache Hive](https://hive.apache.org/) runs over the Hadoop framework and provides an SQL-like interface for processing and querying the HDFS data.
+* [CDP Private Cloud]() built for hybrid cloud, connecting on-premises environments to public clouds. It provides a disaggregation of compute and storage, allowing for independent scaling of compute and storage clusters. Analytics running on containerized compute nodes, scalable object store, and a secure data lake.
 
-[Hive on Tez](https://docs.cloudera.com/cdp-private-cloud-base/7.1.6/hive-introduction/topics/hive-on-tez.html) provides a SQL-based data warehouse system based on Apache Hive. It improves SQL query performance, security, and auditing capabilities.
+* [Apache Hive](https://hive.apache.org/) runs over the Hadoop framework and provides an SQL-like interface for processing and querying the HDFS data.
 
-[Hadoop Execution Engine]() used to communicate with Hadoop.
+* [Hive on Tez](https://docs.cloudera.com/cdp-private-cloud-base/7.1.6/hive-introduction/topics/hive-on-tez.html) provides a SQL-based data warehouse system based on Apache Hive. It improves SQL query performance, security, and auditing capabilities.
 
-[Apache Impala](https://impala.apache.org/) is similar to Hive, but with low-latency and high concurrency it provides a better option for interactive computing.
+* [Hadoop Execution Engine]() used to communicate with Hadoop.
 
-[Apache Knox](https://knox.apache.org/) is an application gateway for interacting with the REST APIs and UIs of Hadoop deployments. Knox presents consumers with one endpoint for access to all the required services across multiple Hadoop clusters.
+* [Apache Impala](https://impala.apache.org/) is similar to Hive, but with low-latency and high concurrency it provides a better option for interactive computing.
 
-[IBM Execution Engine for Hadoop](https://www.ibm.com/docs/en/watson-studio-local/2.0.0?topic=iao-setting-up-execution-engine-apache-hadoop-work-watson-studio-local) this add-on provides integration of IBM Cloud Pak for Data with a Hadoop cluster. It enables data scientists to use CPD to securely explore Hadoop data without needing to move the data out of the Hadoop cluster.
+* [Apache Knox](https://knox.apache.org/) is an application gateway for interacting with the REST APIs and UIs of Hadoop deployments. Knox presents consumers with one endpoint for access to all the required services across multiple Hadoop clusters.
+
+* [IBM Execution Engine for Hadoop](https://www.ibm.com/docs/en/watson-studio-local/2.0.0?topic=iao-setting-up-execution-engine-apache-hadoop-work-watson-studio-local) this add-on provides integration of IBM Cloud Pak for Data with a Hadoop cluster. It enables data scientists to use CPD to securely explore Hadoop data without needing to move the data out of the Hadoop cluster.
 
 ### IBM Cloud Pak for Data
 
 [IBM Cloud Pak for Data](https://www.ibm.com/products/cloud-pak-for-data) is a unified, pre-integrated data and AI platform that runs natively on [Red Hat OpenShift Container platform](https://www.openshift.com/products/container-platform). Services are delivered with an open and extensible cloud native platform for collecting, organizing, and analyzing data. It’s a single interface to perform end-to-end analytics with built-in governance. It also supports and governs the end-to-end AI workflow.
 
-[IBM Db2](https://www.ibm.com/analytics/db2) is a Relational Database Management System (RDBMS). Along with providing the Db2 relational database, it includes a family of tools that allows you to manage both structured and unstructured data across on-premises and multi-cloud environments.
+* [IBM Db2](https://www.ibm.com/analytics/db2) is a Relational Database Management System (RDBMS). Along with providing the Db2 relational database, it includes a family of tools that allows you to manage both structured and unstructured data across on-premises and multi-cloud environments.
 
-[IBM Big SQL](https://www.ibm.com/docs/en/db2-big-sql/5.0.2?topic=overview) provides a single database connection to query data across Hadoop and other relational/NoSQL databases. Data can reside on local systems or on the cloud.
+* [IBM Big SQL](https://www.ibm.com/docs/en/db2-big-sql/5.0.2?topic=overview) provides a single database connection to query data across Hadoop and other relational/NoSQL databases. Data can reside on local systems or on the cloud.
 
-[Data Virtualization]() can query data across many systems without having to copy and replicate data. Is accurate because you’re querying the latest data at its source.
+* [Data Virtualization]() can query data across many systems without having to copy and replicate data. Is accurate because you’re querying the latest data at its source.
 
-[IBM Cognos Analytics Dashboard](): self-service analytics, infused with AI and machine learning, enable you to create stunning visualizations and share your findings through dashboards and reports.
+* [IBM Cognos Analytics Dashboard](): self-service analytics, infused with AI and machine learning, enable you to create stunning visualizations and share your findings through dashboards and reports.
 
-## Cloudera Data Platform installation and configuration
+## 2. Overview of our Cloudera Data Platform and IBM Cloud Pak for Data clusters
+
+### CDP installation and configuration
 
 The version of CDP we are using is `7.1.6`.
 
 Here is the environment that we have configured for our CDP Private Cloud instance:
 
-### Cloudera cluster nodes
+#### CDP cluster nodes
 
-We provisioned an 8 node cluster on IBM Cloud to host our Cloudera Data Platform instance.
+We provisioned an 8 node cluster on IBM Cloud to host our CDP instance.
 
 We also provisioned two additional virtual servers -- one for a [bastion node](https://en.wikipedia.org/wiki/Bastion_host) so that we could easily SSH into all the other nodes, and the other for an Active Directory Server to manage authentication for our cluster.
 
@@ -75,13 +87,13 @@ Here are the nodes listed in our IBM Cloud devices list:
 
 Each was provisioned with 32 vCPU and 128GB of RAM running CentOS.
 
-#### Active Directory Server
+##### Active Directory Server
 
 We set up an Active Directory Server [`cid-adc`] on Windows 2019 Server to manage access to our Cloudera base installation. This includes Active Directory Domain Services and a DNS server -- we created a private DNS domain named `cdplab.local`. We added DNS entries for each VM in our CDP cluster. This is also where we define our Active Directory and domain users.
 
 As part of the CDP install, each Active Directory user will be provided an HDFS home directory.
 
-### Cloudera Manager
+#### Cloudera Manager
 
 We manage our CDP using Cloudera Manager running on `cid-vm-01`.
 
@@ -93,21 +105,19 @@ Here is the list of services available on the cluster:
 
 ![cdp-service-list](images/cdp-service-list.png)
 
-## IBM Cloud Pak for Data installation and configuration
+### IBM CP4D installation and configuration
 
-We are running CPD version 3.5 that we provisioned from IBM Cloud.
+We are running CP4D version 3.5 that we provisioned from IBM Cloud.
 
 ![cpd-home](images/cpd-home.png)
 
-CPD comes pre-packaged with a host of tools and services that can be instantiated. We provisioned Data Virtualization, Streams, and Cognos Analytics.
+CP4D comes pre-packaged with a host of tools and services that can be instantiated. We provisioned Data Virtualization, Streams, and Cognos Analytics.
 
 ![cpd-instances](images/cpd-instances.png)
 
-## Integration points between CPD and CDP
+## 3. Installing the IBM Execution Engine for Hadoop (HEE) on Cloudera Data Platform
 
-### Hadoop Execution Engine (HEE)
-
-To access data on the Cloudera edge nodes from CPD, we need to install the IBM Execution Engine for Hadoop. We did this on our Cloudera cluster edge nodes `cid-vm-07` and `cid-vm-08`.
+To access data on the Cloudera edge nodes from CP4D, we need to install the IBM Execution Engine for Hadoop. We did this on our Cloudera cluster edge nodes `cid-vm-07` and `cid-vm-08`.
 
 >*NOTE*: The reference documentation and package names may use terms like Watson Studio or DSX. These are previous brand names for Cloud Pak for Data.
 
@@ -139,7 +149,7 @@ There are several steps involved with this task:
 
   After installing the package, you will need to run the `manage_known_dsx.py` utility to add the edge node to the managed list. This will return you a `Service URL` that is required for the next step.
 
-* From the Cloud Pak for Data console, select the `Platform configuration` option under `Administration`.
+* From the CP4D console, select the `Platform configuration` option under `Administration`.
 
     ![cpd-platform-config](images/cpd-platform-config.png)
 
@@ -163,7 +173,7 @@ There are several steps involved with this task:
 
   >*Note*: that these values will be needed when we run our CPD notebook that accesses data on Cloudera.
 
-## Configure CPD Platform connections via Hadoop Execution Engine
+## 4. Use HEE to configure Cloudera Data Platform connections
 
 These tasks require you log in as `admin` on your CPD console.
 
@@ -277,7 +287,7 @@ Once all of our connections have been created and tested, our `Platform connecti
 
 [add-screen-shot]()
 
-## Load Cloudera data
+## 5. Load data on Cloudera Data Platform
 
 On the Cloudera side, we will use Hive to populate our Hadoop tables.
 
@@ -286,23 +296,67 @@ Tables - BRANCHES, PRODUCTS, RETAILERS, SALES_REPS
 
 Can access using "kinit" to login, and "beeline" to run queries.
 
-## Load CPD data
+## 6. Load data on IBM Cloud Pak for Data
 
 On the CPD side, we will add our data into a Db2 instance. The data is transactional, such as profit, revenue, sales price
 
 Schema - GREAT_OUTDOORS
 Table - SALES
 
+## 7. Access Cloudera data from Jupyter notebook running on Cloud Pak for Data
 
+## 8. Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data
 
-## Run Data Virtualization
+### View data sources
 
-## Run CPD notebook
+See 2 connections to data. "bigsql" to connect to CDP data, and "db2-on-cpd" to connect to Db2 data.
 
-## Run Cognos
+### Add virtual objects
 
+Use "Add Virtual Objects" button.
 
-## Videos
+Connect "SALES" table in Db2 data with "PRODUCTS" table in Hive data.
+
+With create a new virtualized view in your default schema of your project. These 2 new virtualized objects will be displayed.
+
+### Join the 2 tables
+
+Join "REVENUE", "PROFIT" and "Product number" from Db2 with "PRODUCT_NUMBER", "PRODUCT_TYPE" and "PRODUCT" from Hive. Use product number as key.
+
+Use SQL editor to modify the default SQL query. Add "GROUP BY" statement.
+
+Run the command.
+
+New view should show the new virtualized table (HIGHEST_REVENUE_PRODUCTS).
+
+Preview the new table.
+
+## 9. Build Cognos Analytics dashboard to visualize merged data
+
+### Add "Data server connection"
+
+Set up URL to connect to data virtualization service on CPD
+
+You will need to enter uname/pwd to complete
+
+Load schema and metadata
+
+### Create data module
+
+Use data source just added
+
+Select table that we want: HIGHEST_REVENUE_PRODUCTS
+
+Save data module
+
+### Build dashboard
+
+Drag SALES_REVENUE
+Add PRODUCT_TYPE
+
+Change scatter plot to tree map
+
+## Associated Videos
 
 1. Set up Active Directory Server on Windows 2019 Server
     - needed for Cloudera Data Platform
@@ -339,60 +393,6 @@ Table - SALES
       - PRODUCTS (db2-on-cpd)
     - Join the 2 tables by mapping PRODUCT name
 10. Cognos integration
-
-
-## Steps
-
-### 1. Use CPD Data Virtualization to join the tables
-
-#### View data sources
-
-See 2 connections to data. "bigsql" to connect to CDP data, and "db2-on-cpd" to connect to Db2 data.
-
-#### Add virtual objects
-
-Use "Add Virtual Objects" button.
-
-Connect "SALES" table in Db2 data with "PRODUCTS" table in Hive data.
-
-With create a new virtualized view in your default schema of your project. These 2 new virtualized objects will be displayed.
-
-#### Join the 2 tables
-
-Join "REVENUE", "PROFIT" and "Product number" from Db2 with "PRODUCT_NUMBER", "PRODUCT_TYPE" and "PRODUCT" from Hive. Use product number as key.
-
-Use SQL editor to modify the default SQL query. Add "GROUP BY" statement.
-
-Run the command.
-
-New view should show the new virtualized table (HIGHEST_REVENUE_PRODUCTS).
-
-Preview the new table.
-
-### 2. Create Cognos Dashboard
-
-#### Add "Data server connection"
-
-Set up URL to connect to data virtualization service on CPD
-
-You will need to enter uname/pwd to complete
-
-Load schema and metadata
-
-#### Create data module
-
-Use data source just added
-
-Select table that we want: HIGHEST_REVENUE_PRODUCTS
-
-Save data module
-
-#### Build dashboard
-
-Drag SALES_REVENUE
-Add PRODUCT_TYPE
-
-Change scatter plot to tree map
 
 ## License
 
