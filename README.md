@@ -13,11 +13,13 @@ Due to the complexity of installing a Cloudera cluster, it is assumed the reader
     * [HDFS Connection](#-hdfs-connection)
     * [Hive Connection](#-hive-connection)
     * [Impala Connection](#-impala-connection)
-1. [Load data on Cloudera Data Platform](#5-load-data-on-cloudera-data-platform)
-1. [Load data on IBM Cloud Pak for Data](#6-load-data-on-ibm-cloud-pak-for-data)
-1. [Access Cloudera data from Jupyter notebook running on Cloud Pak for Data](#7-access-cloudera-data-from-jupyter-notebook-running-on-cloud-pak-for-data)
-1. [Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data](#8-use-data-virtualization-to-merge-data-from-cloudera-and-cloud-pak-for-data)
-1. [Build Cognos Analytics dashboard to visualize merged data](#9-build-cognos-analytics-dashboard-to-visualize-merged-data)
+1. [Load data on Cloud Pak for Data](#5-load-data-on-cloud-pak-for-data)
+1. [Create Db2 connection to access data on Cloud Pak for Data](#6-create-db2-connection-to-access-data-on-cloud-pak-for-data)
+1. [Load data on Cloudera Data Platform](#7-load-data-on-cloudera-data-platform)
+1. [Use IBM BigSQL to synchronize data from Hive table into Cloud Pak for Data](#8-use-ibm-bigsql-to-synchronize-data-from-hive-table-into-cloud-pak-for-data)
+1. [Access Cloudera data from Jupyter notebook running on Cloud Pak for Data](#9-access-cloudera-data-from-jupyter-notebook-running-on-cloud-pak-for-data)
+1. [Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data](#10-use-data-virtualization-to-merge-data-from-cloudera-and-cloud-pak-for-data)
+1. [Build Cognos Analytics dashboard to visualize merged data](#11-build-cognos-analytics-dashboard-to-visualize-merged-data)
 
 ## 1. Overview of technologies
 
@@ -179,9 +181,13 @@ These tasks require you log in as `admin` on your CPD console.
 
 From the main menu, select `Data` and then `Platform connections`.
 
-[add-screen-shot]()
+[add-screen-shot of current connections]()
 
-Click `New connection`
+Click `New connection`.
+
+[add-screen-shot of connection options]()
+
+Use this panel as the starting point for creating the following connections.
 
 ### HDFS Connection
 
@@ -287,25 +293,118 @@ Once all of our connections have been created and tested, our `Platform connecti
 
 [add-screen-shot]()
 
-## 5. Load data on Cloudera Data Platform
+## 5. Load data on Cloud Pak for Data
 
-On the Cloudera side, we will use Hive to populate our Hadoop tables.
+On the Cloud Pak for Data cluster, we will add our data into a Db2 instance. The data is transactional, such as profit, revenue, sales price
 
-Schema - GREAT_OUTDOORS_DATA
-Tables - BRANCHES, PRODUCTS, RETAILERS, SALES_REPS
+The Db2 service has been provisioned in our Cloud Pak for Data instance. To view it, from the main Cloud Pak for Data menu, select `Services`, and then click on `Instances`.
 
-Can access using "kinit" to login, and "beeline" to run queries.
+![cpd-db2-instance](images/cpd-db2-instance.png)
 
-## 6. Load data on IBM Cloud Pak for Data
+Click on the Db2 instance name to bring up the details panel. Click on the `Open database` button in the top right corner.
 
-On the CPD side, we will add our data into a Db2 instance. The data is transactional, such as profit, revenue, sales price
+From the summary panel, click `Load Data`.
 
+![cpd-db2-load-option](images/cpd-db2-load-option.png)
+
+From the `File selection` window, upload the product data from a CSV file. NEED DATA FILE!!!!
+
+CREATE TABLE
 Schema - GREAT_OUTDOORS
 Table - SALES
 
-## 7. Access Cloudera data from Jupyter notebook running on Cloud Pak for Data
+ADD NEW `DB2` CONNECTION
 
-## 8. Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data
+## 6. Create Db2 connection to access data on Cloud Pak for Data
+
+After creating the data, we need to create a new connection to access it. Note that this task requires you to log in as `admin` on your CPD console.
+
+From the main menu, select `Data` and then `Platform connections`.
+
+[add-screen-shot of current connections]()
+
+Click `New connection`.
+
+[add-screen-shot of connection options]()
+
+From the new connection screen, in the IBM list of connection options, select `Db2`.
+
+![cpd-db2-instance-details](images/cpd-db2-instance-details.png)
+
+## 7. Load data on Cloudera Data Platform
+
+On the Cloudera side, we will use Hive to populate our Hadoop tables. In our example, the data will be related to products (brand, description, price, ID, etc.).
+
+First we need to do some setup to connect to our Hive service.
+
+* Download the hive configuration file by selecting the `Download Client Configuration` option listed under the `Actions` drop-down menu for our Cloudera `Hive on Tez` service.
+
+    ![cloudera-hive-client-config](images/cloudera-hive-client-config.png)
+
+  This action will download a Hive configuration zip file. Unzip the file, then `cd` into the `hive-conf` directory to locate the `beeline-site.xml` file.
+
+  Open the file and find the URL associated with the property `beeline-hs2-jdbc-url-hive_on_tez`. Copy and paste this value and then exit the file.
+
+* Log into one of the master nodes in your CPD cluster.
+
+  Start the beeline CLI by typing:
+  
+  ```bash
+  beeline
+  ```
+
+  Connect to the Hive service by typing:
+  
+  ```bash
+  !connect <jdbc-url>  // For `jdbc-url`, use the value copied from the previous step
+  ```
+
+* Use the following SQL commands to create a new database and tables.
+
+  ```bash
+  CREATE DATABASE great_outdoors_2;
+  CREATE TABLE great_outdoors_2.products (
+    `Product_number` STRING,
+    `Product_line` STRING,
+    `Product_type` STRING,
+    `Product` STRING,
+    `Introduction_date` STRING,
+    `Product_brand` STRING,
+    `Product_color` STRING,
+    `Product_size` STRING,
+    `Product_description` STRING,
+    `Unit_cost` STRING,
+    `Unit_price` STRING)
+    STORED AS ORC TBLPROPERTIES('transactional'='false');
+  ```
+
+* Add some data.
+
+  ```bash
+  GET STRINGS FROM STEVE
+  ```
+
+* Verify our tables.
+
+  ```bash
+  SELECT * FROM great_outdoors_2.products;
+  ```
+
+Schema - GREAT_OUTDOORS_DATA
+
+Tables - BRANCHES, PRODUCTS, RETAILERS, SALES_REPS
+
+Need to use `kinit` ???
+
+## 8. Use IBM BigSQL to synchronize data from Hive table into Cloud Pak for Data
+    
+    - BigSQL in installed on CPD - named `Db2-Big-SQL-2`
+    - To use virtualization, need to create a JDBC connection (port 443)
+    - connection named `bigsql`
+
+## 9. Access Cloudera data from Jupyter notebook running on Cloud Pak for Data
+
+## 10. Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data
 
 ### View data sources
 
@@ -331,7 +430,7 @@ New view should show the new virtualized table (HIGHEST_REVENUE_PRODUCTS).
 
 Preview the new table.
 
-## 9. Build Cognos Analytics dashboard to visualize merged data
+## 11. Build Cognos Analytics dashboard to visualize merged data
 
 ### Add "Data server connection"
 
