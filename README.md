@@ -109,7 +109,7 @@ We are running CP4D version 3.5 that we provisioned from IBM Cloud.
 
 ![cpd-home](images/cpd-home.png)
 
-CP4D comes pre-packaged with a host of tools and services that can be instantiated. We provisioned Data Virtualization, Streams, and Cognos Analytics.
+CP4D comes pre-packaged with a host of tools and services that can be instantiated. We provisioned Data Virtualization, Db2, Big SQL, and Cognos Analytics.
 
 ![cpd-instances](images/cpd-instances.png)
 
@@ -143,9 +143,11 @@ You can then view all of the data rows that will be uploaded into our new `SALES
 
 ![cpd-db2-load-page-4](images/cpd-db2-load-page-4.png)
 
-Note that you can toggle the `Header in first row` toggle to view the column header names.
+Note that you can toggle the `Header in first row` button to view the column header names.
 
 Click `Next` to start the loading of the data.
+
+<<TODO: Add screen shot of loading>>
 
 ## 4. Create Db2 connection to access data on Cloud Pak for Data
 
@@ -180,7 +182,7 @@ Transfer the data from these panels into the new connection panel and click `Tes
 * Enter unique name for the connection `Name`.
 * `Database` name can be found in panel 1.
 * `Hostname` can be found in panel 2.
-* `Port` is found in parsed from the JDBC Connection URL (SSL) found in panel 1.
+* `Port` can be parsed from the JDBC Connection URL (SSL) found in panel 1.
 * `Username` and `Password` are your Cloud Pak for Data credentials.
 * `SSL certificate` can be downloaded from panel 1.
 
@@ -208,8 +210,8 @@ First we need to do some setup to connect to our Hive service.
   beeline
   ```
 
-  <<TODO: Need to use `kinit` ???>>
-
+  >**NOTE**: The authentication process will depend on how you configured your CPD Private instance.
+  
   Connect to the Hive service by typing:
   
   ```bash
@@ -237,13 +239,14 @@ First we need to do some setup to connect to our Hive service.
     STORED AS textfile TBLPROPERTIES('transactional'='false');
   ```
 
-* Move [product CSV file](data/Products.csv) to your user directory on the master node and then use Hive to insert the records.
+* Move [product CSV file](data/Products.csv) to your user HDFS home directory on the master node and then use Hive to insert the records.
 
   ```bash
   LOAD DATA INPATH '/<user-dir>/Products.csv' OVERWRITE INTO TABLE products;
   ```
 
-Schema - GREAT_OUTDOORS_DATA
+<<TODO: need the actual SQL statement used>>
+<<TODO: how is schema set? - GREAT_OUTDOORS_DATA>>
 
 ## 6. Use IBM BigSQL to synchronize data from Hive table into Cloud Pak for Data
 
@@ -268,7 +271,9 @@ CALL SYSHADOOP.HCAT_SYNC_OBJECTS('great_outdoors_2', 'products', 't');
 
 Click on `GREAT_OUTDOORS_2` schema. Then click on `PRODUCTS` table.
 
-Verfify data is all there.
+Verify data is all there.
+
+<<TODO: this whold big SQL setup did not work for me - getting CPD errors>>
 
 ### Create JDBC Connection
 
@@ -295,6 +300,8 @@ openssl s_client -showcerts -servername <hostname without port> -connect <hostna
 This will return a chain certificate, so you will need to copy both and paste into the SSL certificate field. Note, be sure to remove any extraneous lines outside of the `BEGIN` and `END` certificate delimiters.
 
 Click the `Test` button to ensure the connection works.
+
+<<TODO: add screenshot>>
 
 ## 7. Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data
 
@@ -408,13 +415,34 @@ To see our new view, navigate back to the `My virtualized data` panel. You shoul
 
 Use the action menu for the view to select the `Preview` option.
 
-<<TODO: screen shots of new view>>
+<<TODO: screen shots of new view. I got CPD errors>>
 
 ## 8. Build Cognos Analytics dashboard to visualize merged data
 
 <<TODO: Cognos section is WIP>>
 
-### Add "Data server connection"
+To use Cognos Analytics, we will need to connect to `Big SQL` to access the Hive data on our Cloudera cluster. Grab the port number for our `Big SQL` instance from the Red Hat OpenShift console:
+
+<<TODO: add screen shot. And how do we connect to OpenShift?>>
+PORT: 32052
+
+### Launch Cognos Analytics instance
+
+From the CPD `Instances` panel, locate the Cognos Analytics service, then click on `Open` from the action menu.
+
+![cpd-cognos-open](images/cpd-cognos-open.png)
+
+This will bring up the Cognos Analytics service home page.
+
+![cpd-cognos-home](images/cpd-cognos-home.png)
+
+### Add Big SQL connection
+
+To navigate to the `Big SQL` connection panel, start by clicking on the `Manage` option from the main menu. From the `Data server connections` panel, clicking the `+` button to create a new connection.
+
+From the `Type` list, select `IBM Big SQL`.
+
+![cpd-cognos-config-connection](images/cpd-cognos-config-connection.png)
 
 Set up URL to connect to data virtualization service on CPD
 
