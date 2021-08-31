@@ -8,22 +8,16 @@ Due to the complexity of installing a Cloudera cluster, it is assumed the reader
 
 1. [Overview of technologies](#1-overview-of-technologies)
 1. [Overview of our Cloudera Data Platform and IBM Cloud Pak for Data clusters](#2-overview-of-our-cloudera-data-platform-and-ibm-cloud-pak-for-data-clusters)
-1. [Installing the IBM Execution Engine for Hadoop (HEE) on Cloudera Data Platform](#3-installing-the-ibm-execution-engine-for-hadoop-hee-on-cloudera-data-platform)
-1. [Use HEE to configure Cloudera Data Platform connections](#4-use-hee-to-configure-cloudera-data-platform-connections)
-    * [HDFS Connection](#-hdfs-connection)
-    * [Hive Connection](#-hive-connection)
-    * [Impala Connection](#-impala-connection)
-1. [Load data on Cloud Pak for Data](#5-load-data-on-cloud-pak-for-data)
-1. [Create Db2 connection to access data on Cloud Pak for Data](#6-create-db2-connection-to-access-data-on-cloud-pak-for-data)
-1. [Load data on Cloudera Data Platform](#7-load-data-on-cloudera-data-platform)
-1. [Use IBM BigSQL to synchronize data from Hive table into Cloud Pak for Data](#8-use-ibm-bigsql-to-synchronize-data-from-hive-table-into-cloud-pak-for-data)
-1. [Access Cloudera data from Jupyter notebook running on Cloud Pak for Data](#9-access-cloudera-data-from-jupyter-notebook-running-on-cloud-pak-for-data)
-1. [Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data](#10-use-data-virtualization-to-merge-data-from-cloudera-and-cloud-pak-for-data)
-1. [Build Cognos Analytics dashboard to visualize merged data](#11-build-cognos-analytics-dashboard-to-visualize-merged-data)
+1. [Load data on Cloud Pak for Data](#3-load-data-on-cloud-pak-for-data)
+1. [Create Db2 connection to access data on Cloud Pak for Data](#4-create-db2-connection-to-access-data-on-cloud-pak-for-data)
+1. [Load data on Cloudera Data Platform](#5-load-data-on-cloudera-data-platform)
+1. [Use IBM BigSQL to synchronize data from Hive table into Cloud Pak for Data](#6-use-ibm-bigsql-to-synchronize-data-from-hive-table-into-cloud-pak-for-data)
+1. [Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data](#7-use-data-virtualization-to-merge-data-from-cloudera-and-cloud-pak-for-data)
+1. [Build Cognos Analytics dashboard to visualize merged data](#8-build-cognos-analytics-dashboard-to-visualize-merged-data)
 
 ## 1. Overview of technologies
 
-Let's start with some an overview of the technologies that we will be utilizing:
+Let's start with an overview of the technologies that we will be utilizing:
 
 ### Cloudera
 
@@ -47,11 +41,13 @@ Let's start with some an overview of the technologies that we will be utilizing:
 
 * [Apache Knox](https://knox.apache.org/) is an application gateway for interacting with the REST APIs and UIs of Hadoop deployments. Knox presents consumers with one endpoint for access to all the required services across multiple Hadoop clusters.
 
-* [IBM Execution Engine for Hadoop](https://www.ibm.com/docs/en/watson-studio-local/2.0.0?topic=iao-setting-up-execution-engine-apache-hadoop-work-watson-studio-local) this add-on provides integration of IBM Cloud Pak for Data with a Hadoop cluster. It enables data scientists to use CPD to securely explore Hadoop data without needing to move the data out of the Hadoop cluster.
+* [IBM Execution Engine for Hadoop](https://www.ibm.com/docs/en/watson-studio-local/2.0.0?topic=iao-setting-up-execution-engine-apache-hadoop-work-watson-studio-local) this add-on provides integration of IBM Cloud Pak for Data with a Hadoop cluster. It enables data scientists to use CPD to securely explore Hadoop data without needing to move the data out of the Hadoop cluster. 
+
+<<TODO: Do we need reference to IBM HEE?>>
 
 ### IBM Cloud Pak for Data
 
-[IBM Cloud Pak for Data](https://www.ibm.com/products/cloud-pak-for-data) is a unified, pre-integrated data and AI platform that runs natively on [Red Hat OpenShift Container platform](https://www.openshift.com/products/container-platform). Services are delivered with an open and extensible cloud native platform for collecting, organizing, and analyzing data. It’s a single interface to perform end-to-end analytics with built-in governance. It also supports and governs the end-to-end AI workflow.
+[IBM Cloud Pak for Data](https://www.ibm.com/products/cloud-pak-for-data) is a unified, pre-integrated data and AI platform that runs natively on the [Red Hat OpenShift Container platform](https://www.openshift.com/products/container-platform). Services are delivered with an open and extensible cloud native platform for collecting, organizing, and analyzing data. It’s a single interface to perform end-to-end analytics with built-in governance. It also supports and governs the end-to-end AI workflow.
 
 * [IBM Db2](https://www.ibm.com/analytics/db2) is a Relational Database Management System (RDBMS). Along with providing the Db2 relational database, it includes a family of tools that allows you to manage both structured and unstructured data across on-premises and multi-cloud environments.
 
@@ -117,183 +113,7 @@ CP4D comes pre-packaged with a host of tools and services that can be instantiat
 
 ![cpd-instances](images/cpd-instances.png)
 
-## 3. Installing the IBM Execution Engine for Hadoop (HEE) on Cloudera Data Platform
-
-To access data on the Cloudera edge nodes from CP4D, we need to install the IBM Execution Engine for Hadoop. We did this on our Cloudera cluster edge nodes `cid-vm-07` and `cid-vm-08`.
-
->*NOTE*: The reference documentation and package names may use terms like Watson Studio or DSX. These are previous brand names for Cloud Pak for Data.
-
-There are several steps involved with this task:
-
-* From the Cloudera Manager home page, click the `Configuration` drop-down menu, and select `Advanced Configuration Snippets`.
-
-    ![cdp-advanced-config](images/cdp-advanced-config.png)
-
-* To get to the right settings, search on `core-site.xmd`.
-
-    ![cdp-config-edge-nodes](images/cdp-config-edge-nodes.png)
-
-    On the HBase Service settings panel, add entries for:
-
-    * hadoop.proxyuser.dsxhi.hosts (set value to the names of the edge nodes)
-    * hadoop.proxyuser.dsxhi.groups
-    * hadoop.proxyuser.dsxhi.users
-
-* Ensure the HiveServer2 instance is running in the `Hive on Tez` service. To verify, select `Hive on Tez` entry in the main service list for your cluster. Then select `Instances`.
-
-    ![cdp-hive-server2](images/cdp-hive-server2.png)
-
-  This is required because the HEE calls the HiveServer2 endpoint to get information about Hive.
-
-* Install the IBM Execution Engine package on both of the edge nodes.
-
-  Here is a link to the RPM package: !!need link!!
-
-  After installing the package, you will need to run the `manage_known_dsx.py` utility to add the edge node to the managed list. This will return you a `Service URL` that is required for the next step.
-
-* From the CP4D console, select the `Platform configuration` option under `Administration`.
-
-    ![cpd-platform-config](images/cpd-platform-config.png)
-
-* From the `Platform configuration` panel, select the `System Integration` tab. To add our 2 edge nodes, click `New integration` and add the nodes.
-
-    ![cpd-system-integration](images/cpd-system-integration.png)
-
-* From the `Add Registration` dialog, enter the `Service URL` you collected from the last step. For `Display Name`, enter a unique name for your edge node. For `Service User ID`, enter `dsxhi`.
-
-  ?? is service user id set during install of HEE?
-
-  When complete, each of your edge nodes should have an entry similar to the how we added our two edge nodes (`cid-vm-07` and `cid-vm-08`).
-
-    ![cpd-edge-node-registration](images/cpd-edge-node-registration.png)
-
-  Click on one of the edge node entries to get details.
-
-    ![cpd-edge-node-details-1](images/cpd-edge-node-details-1.png)
-
-    ![cpd-edge-node-details-2](images/cpd-edge-node-details-2.png)
-
-  >*Note*: that these values will be needed when we run our CPD notebook that accesses data on Cloudera.
-
-## 4. Use HEE to configure Cloudera Data Platform connections
-
-These tasks require you log in as `admin` on your CPD console.
-
-From the main menu, select `Data` and then `Platform connections`.
-
-[add-screen-shot of current connections]()
-
-Click `New connection`.
-
-[add-screen-shot of connection options]()
-
-Use this panel as the starting point for creating the following connections.
-
-### HDFS Connection
-
-First, let's create an HDFS via Execution Engine for Hadoop connection. Click [here](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_latest/wsj/manage-data/conn-hadoop-hdfs.html) for details on how to configure it and the benefits it provides.
-
-Essentially, this connection will allow us to access HDFS data in a Hadoop cluster (i.e. Cloudera).
-
-From the new connection screen, in the IBM list of connection options, select `HDFS via Execution Engine for Hadoop`.
-
-[add-screen-shot]()
-
-From the panel, enter a unique connection name, like `hdfs-hee`.
-
-For the `WebHDFS URL`, get the value from the `Platform configuration` details for your edge node.
-
-![cpd-edge-node-webhdfs-url](images/cpd-edge-node-webhdfs-url.png)
-
-Turn on the options to:
-* `Use your Cloud Pak for Data credentials to authenticate to the data source`.
-* `User home directory is used as the root of browsing`.
-
-For the SSL certificate, you need to return log into your edge node, then run the `openssl` command with the `-showcerts` option on the default port `8443`. Copy and paste the returned certificate into the `Certificates` text field.
-
-Click the `Create` button.
-
-After the connection is created, you can click on new connection to see the details. You can also click the `Test` button to try out the connection.
-
-### Hive Connection
-
-Next, let's create a Hive via Execution Engine for Hadoop connection. Click [here](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_latest/wsj/manage-data/conn-hadoop-hive.html) for details on how to configure it and the benefits it provides.
-
-Essentially, this connection will allow us to access tables in a Hive warehouse on a Hadoop cluster (i.e. Cloudera).
-
-From the new connection screen, in the IBM list of connection options, select `Hive via Execution Engine for Hadoop`.
-
-[add-screen-shot]()
-
-From the panel, enter a unique connection name, like `hive-hee`.
-
-For the `Jars url` field, click `Upload new file`. Select Hive jdbc v4.1 jar that you downloaded earlier to your local file directory. ????
-
-For the `Hadoop Integration URL`, get the value from the `Platform configuration` details for your edge node.
-
-![cpd-edge-node-service-url](images/cpd-edge-node-service-url.png)
-
-Turn on the option to `Use your Cloud Pak for Data credentials to authenticate to the data source`.
-
-For the SSL certificate, you need certificates for both the edge node and the Hive server. For the edge node, repeat the steps you used for the previous connection -- using `openssl` command on default port `8443`. Copy and paste the returned certificate into the `Certificates` text field.
-
-For the Hive server certificate, you need to run the `openssl` command on the system hosting the Hive server. To get the port number, go to the `HiveServer2` instance panel in the Cloudera Manager, and search on `port`.
-
-Notice that we looking at the `HiveServer2` panel running on edge node `cid-vm-07`. The port number is set to `10000`.
-
-![cloudera-hive2-port](images/cloudera-hive2-port.png)
-
-Copy and append the returned certificate into the `Certificates` text field.
-
-Click the `Create` button.
-
-After the connection is created, you can click on new connection to see the details. You can also click the `Test` button to try out the connection.
-
-### Impala Connection
-
-Next, let's create an Impala via Execution Engine for Hadoop connection. Click [here](https://www.ibm.com/support/producthub/icpdata/docs/content/SSQNUZ_latest/wsj/manage-data/conn-hadoop-impala.html) for details on how to configure it and the benefits it provides.
-
-Essentially, this connection will allow us to access data stored in tables in Impala on a Hadoop cluster (i.e. Cloudera).
-
-Before we create the connection, we must first configure Impala with LDAP. From the Cloudera Manager, select the `Impala` service, the click on `Configuration`.
-
-![cloudera-impala-ldap](images/cloudera-impala-ldap.png)
-
-Select `Enable LDAP Authentication`, then enter the URL and port (`636` is the default for secure LDAP), and domain for your Active Directory server. Lastly, add the `pem` file containing your LDAP CA certificate.
-
-Save your changes, then restart the Impala service.
-
-![cloudera-impala-restart](images/cloudera-impala-restart.png)
-
-Once complete, we can move on to creating the connection. From the new connection screen, in the IBM list of connection options, select `Impala via Execution Engine for Hadoop`.
-
-[add-screen-shot]()
-
-From the panel, enter a unique connection name, like `impala-hee`.
-
-For the `Hostname or IP Address` field, you need to enter a host on the Cloudera cluster that is running the Impala daemon. From the Cloudera Manager, select the `Impala` service, then click on `Instances`.
-
-![cloudera-impala-host](images/cloudera-impala-host.png)
-
-For `Port`, search on `Impala Daemon HiveServer2 Port` in the `Impala` service `Configuration` panel. The default value is `21050`.
-
-![cloudera-impala-port](images/cloudera-impala-port.png)
-
-For the `Jars url` field, click `Upload new file`. Select Impala jdbc v4.1 jar that you downloaded earlier to your local file directory. ????
-
-For credentials, enter your Active Directory user name and password.
-
-For the SSL certificate, you need to return log into your cluster node that is running the Impala daemon, then run the `openssl` command with the `-showcerts` option on the default port `21050`. Copy and paste the returned certificate into the `Certificates` text field.
-
-Click the `Create` button.
-
-After the connection is created, you can click on new connection to see the details. You can also click the `Test` button to try out the connection.
-
-Once all of our connections have been created and tested, our `Platform connections` list should look similar to this:
-
-[add-screen-shot]()
-
-## 5. Load data on Cloud Pak for Data
+## 3. Load data on Cloud Pak for Data
 
 On the Cloud Pak for Data cluster, we will add our data into a Db2 instance. The data is transactional, such as profit, revenue, sales price
 
@@ -307,31 +127,66 @@ From the summary panel, click `Load Data`.
 
 ![cpd-db2-load-option](images/cpd-db2-load-option.png)
 
-From the `File selection` window, upload the product data from a CSV file. NEED DATA FILE!!!!
+From the `File selection` window, upload the `Sales` CSV file from our [data directory](data/Sales.csv), then click `Next`.
 
-CREATE TABLE
-Schema - GREAT_OUTDOORS
-Table - SALES
+![cpd-db2-load-page-1](images/cpd-db2-load-page-1.png)
 
-ADD NEW `DB2` CONNECTION
+To create a new `sales` table, select the `GREAT_OUTDOORS` schema, and then click the `New table +` button. Enter `SALES` as the new table name and then click `Create`. 
 
-## 6. Create Db2 connection to access data on Cloud Pak for Data
+![cpd-db2-load-page-2](images/cpd-db2-load-page-2.png)
+
+Once our table is created, click `Next`.
+
+![cpd-db2-load-page-3](images/cpd-db2-load-page-3.png)
+
+You can then view all of the data rows that will be uploaded into our new `SALES` table.
+
+![cpd-db2-load-page-4](images/cpd-db2-load-page-4.png)
+
+Note that you can toggle the `Header in first row` toggle to view the column header names.
+
+Click `Next` to start the loading of the data.
+
+## 4. Create Db2 connection to access data on Cloud Pak for Data
 
 After creating the data, we need to create a new connection to access it. Note that this task requires you to log in as `admin` on your CPD console.
 
 From the main menu, select `Data` and then `Platform connections`.
 
-[add-screen-shot of current connections]()
+![cpd-data-platform-connections](images/cpd-data-platform-connections.png)
 
-Click `New connection`.
+From the `Platform connections` panel, click `New connection`.
 
-[add-screen-shot of connection options]()
+![cpd-new-connection](images/cpd-new-connection.png)
 
-From the new connection screen, in the IBM list of connection options, select `Db2`.
+From the `New connection` panel, in the IBM list of connection options, select `Db2`.
 
-![cpd-db2-instance-details](images/cpd-db2-instance-details.png)
+![cpd-connection-types](images/cpd-connection-types.png)
 
-## 7. Load data on Cloudera Data Platform
+To fill in the data for the new connection, take the values from the following 2 panels:
+
+1. **Panel 1**: The Db2 instance panel, which you can navigate to by selecting `Services` and then `Instances` from the main menu on the CPD Home page, and then clicking on the `Db2` instance name.
+
+    ![cpd-db2-instance-details](images/cpd-db2-instance-details.png)
+
+2. **Panel 2**: The Db2 instance connection information panel. From the previous details page, click on `Open database`, then select `Connection Information` from the `Summary` drop-down menu.
+
+    ![cpd-db2-connection-info](images/cpd-db2-connection-info.png)
+
+Transfer the data from these panels into the new connection panel and click `Test` to ensure it works.
+
+![cpd-db2-connection-test](images/cpd-db2-connection-test.png)
+
+* Enter unique name for the connection `Name`.
+* `Database` name can be found in panel 1.
+* `Hostname` can be found in panel 2.
+* `Port` is found in parsed from the JDBC Connection URL (SSL) found in panel 1.
+* `Username` and `Password` are your Cloud Pak for Data credentials.
+* `SSL certificate` can be downloaded from panel 1.
+
+Click `Create` to create the connection.
+
+## 5. Load data on Cloudera Data Platform
 
 On the Cloudera side, we will use Hive to populate our Hadoop tables. In our example, the data will be related to products (brand, description, price, ID, etc.).
 
@@ -353,6 +208,8 @@ First we need to do some setup to connect to our Hive service.
   beeline
   ```
 
+  <<TODO: Need to use `kinit` ???>>
+
   Connect to the Hive service by typing:
   
   ```bash
@@ -362,9 +219,10 @@ First we need to do some setup to connect to our Hive service.
 * Use the following SQL commands to create a new database and tables.
 
   ```bash
-  CREATE DATABASE great_outdoors_2;
-  CREATE TABLE great_outdoors_2.products (
-    `Product_number` STRING,
+  CREATE DATABASE great_outdoors;
+  USE great_outdoors;
+  CREATE TABLE products (
+    `Product_number` INT,
     `Product_line` STRING,
     `Product_type` STRING,
     `Product` STRING,
@@ -375,62 +233,186 @@ First we need to do some setup to connect to our Hive service.
     `Product_description` STRING,
     `Unit_cost` STRING,
     `Unit_price` STRING)
-    STORED AS ORC TBLPROPERTIES('transactional'='false');
+    row format delimited fields terminated by ','
+    STORED AS textfile TBLPROPERTIES('transactional'='false');
   ```
 
-* Add some data.
+* Move [product CSV file](data/Products.csv) to your user directory on the master node and then use Hive to insert the records.
 
   ```bash
-  GET STRINGS FROM STEVE
-  ```
-
-* Verify our tables.
-
-  ```bash
-  SELECT * FROM great_outdoors_2.products;
+  LOAD DATA INPATH '/<user-dir>/Products.csv' OVERWRITE INTO TABLE products;
   ```
 
 Schema - GREAT_OUTDOORS_DATA
 
-Tables - BRANCHES, PRODUCTS, RETAILERS, SALES_REPS
+## 6. Use IBM BigSQL to synchronize data from Hive table into Cloud Pak for Data
 
-Need to use `kinit` ???
+Make sure you have the `Big SQL` service installed on your CPD cluster.
 
-## 8. Use IBM BigSQL to synchronize data from Hive table into Cloud Pak for Data
-    
-    - BigSQL in installed on CPD - named `Db2-Big-SQL-2`
-    - To use virtualization, need to create a JDBC connection (port 443)
-    - connection named `bigsql`
+![cpd-big-sql-instance](images/cpd-big-sql-instance.png)
 
-## 9. Access Cloudera data from Jupyter notebook running on Cloud Pak for Data
+Open the `Big SQL` service by clicking on `Open` in the action menu.
 
-## 10. Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data
+`Summary` dropdown -> `Run SQL`
 
-### View data sources
+`Create new +`
 
-See 2 connections to data. "bigsql" to connect to CDP data, and "db2-on-cpd" to connect to Db2 data.
+```bash
+CALL SYSHADOOP.HCAT_SYNC_OBJECTS('great_outdoors_2', 'products', 't');
+```
 
-### Add virtual objects
+`Run all`
+`Close` (without saving)  WHY????
 
-Use "Add Virtual Objects" button.
+`Run SQL` dropdown -> `Explore` -> `Hadoop tables`
 
-Connect "SALES" table in Db2 data with "PRODUCTS" table in Hive data.
+Click on `GREAT_OUTDOORS_2` schema. Then click on `PRODUCTS` table.
 
-With create a new virtualized view in your default schema of your project. These 2 new virtualized objects will be displayed.
+Verfify data is all there.
 
-### Join the 2 tables
+### Create JDBC Connection
 
-Join "REVENUE", "PROFIT" and "Product number" from Db2 with "PRODUCT_NUMBER", "PRODUCT_TYPE" and "PRODUCT" from Hive. Use product number as key.
+Platform Connections
 
-Use SQL editor to modify the default SQL query. Add "GROUP BY" statement.
+![cpd-big-sql-connection](images/cpd-big-sql-connection.png)
 
-Run the command.
+Click on the connection name to bring up the details panel.
 
-New view should show the new virtualized table (HIGHEST_REVENUE_PRODUCTS).
+![cpd-big-sql-connection-details](images/cpd-big-sql-connection-details.png)
 
-Preview the new table.
+To determine host name, follow the procedures outlined in the [Setting up a connection to Db2 Big SQL](https://www.ibm.com/docs/en/cloud-paks/cp-data/3.5.0?topic=sql-setting-up-connection-db2-big) instructions. We used the second suggested method - "Passthrough secure route method". The result was a route that we could use for the `Hostname or IP Address` field.
 
-## 11. Build Cognos Analytics dashboard to visualize merged data
+The documentation also suggests setting the `Port` value to 443.
+
+For `Username` and `Password` use your CPD credentials.
+
+For SSL certificate, you must run an `OpenSSL` command to the hostname just generated.
+
+```bash
+openssl s_client -showcerts -servername <hostname without port> -connect <hostname:port> 
+```
+
+This will return a chain certificate, so you will need to copy both and paste into the SSL certificate field. Note, be sure to remove any extraneous lines outside of the `BEGIN` and `END` certificate delimiters.
+
+Click the `Test` button to ensure the connection works.
+
+## 7. Use Data Virtualization to merge data from Cloudera and Cloud Pak for Data
+
+From the Cloud Pak for Data home page menu, open up the `Data` menu and click on `Data Virtualization`.
+
+![cpd-dv-start](images/cpd-dv-start.png)
+
+### Add data sources
+
+The default landing page for `Data Virtualization` is `Data Sources`.
+
+![cpd-dv-data-sources-start](images/cpd-dv-data-sources-start.png)
+
+The `db2-on-cpd` connection we created to connect to the Hive database we created in the previous step. To create this connection, we clicked on the `Add data source` drop-down menu and then clicking on `Select existing connection`.
+
+![cpd-dv-add-connection](images/cpd-dv-add-connection.png)
+
+We then selected our `cdp-pvc-base` connection and clicked `Add`.
+
+### Virtualize tables
+
+From the main drop-down menu, click on `Virtualize`, which is listed under the `Virtualization` option.
+
+![cpd-dv-virtualize-option](images/cpd-dv-virtualize-option.png)
+
+From the `Table` list, select each of the tables we have created, and add them to the `Cart`.
+
+* The `SALES` table associated with the `db2-on-cpd` connection (data from Cloud Pak for Data):
+
+    ![cpd-dv-add-sales-table](images/cpd-dv-add-sales-table.png)
+
+* The `PRODUCTS` table associated with the `cpd-pvc-base` connection (data from Cloudera Data Platform):
+
+    ![cpd-dv-add-products-table](images/cpd-dv-add-products-table.png)
+
+
+Click the `Add to cart` button.
+
+Once available, click the `View cart` button.
+
+![cpd-dv-full-cart](images/cpd-dv-full-cart.png)
+
+Resolve any conflicts, assign to your CPD project, and then click `Virtualize`.
+
+Once complete, click the `View my virtualized data` button on the modal dialog.
+
+NOTE: You can also navigate to your data by clicking on the `My virtualized data` option from the main Data Virtualization menu.
+
+![cpd-dv-view-my-data-option](images/cpd-dv-view-my-data-option.png)
+
+You should now see your new virtualized data tables listed.
+
+![cpd-dv-tables-for-join](images/cpd-dv-tables-for-join.png)
+
+### Join tables
+
+Select the Sales and Products tables, then click the `Join` button in the table header.
+
+We won't need all of the columns for our join, so start by de-selecting all of the column names.
+
+The columns we are interested in are:
+
+Products table: `PRODUCT_NUMBER`, `PRODUCT`, `PRODUCT_TYPE`
+Sales table: `Product number`, `REVENUE`, `Gross profit`
+
+![cpd-dv-select-columns](images/cpd-dv-select-columns.png)
+
+Connect the primary keys together by clicking in the `Product number` row in the `Sales` table, and drag and drop the cursor onto the `PRODUCT_NUMBER` row in the `PRODUCTS` table.
+
+![cpd-dv-connect-keys](images/cpd-dv-connect-keys.png)
+
+If successful, the table in the right hand margin should reflect the joining of the keys.
+
+Click the `Open in SQL editor` button at the top of the right hand margin.
+
+![cpd-dv-go-to-sql-editor](images/cpd-dv-go-to-sql-editor.png)
+
+In the editor window, you will see the SQL statement that was generated from the actions from the previous step. We will need to modify this slightly so that we get total `SUM` values for revenue and gross profit. The `GROUP BY` statements allow us to generate the sums. Note that we are also changing the view name.
+
+```sql
+CREATE VIEW highest_revenue_products
+AS
+SELECT
+    "PRODUCTS"."PRODUCTS"."PRODUCT_NUMBER" AS "PRODUCTS_PRODUCTS_PRODUCT_NUMBER",
+    "PRODUCTS"."PRODUCTS"."PRODUCT" AS "PRODUCTS_PRODUCTS_PRODUCT",
+    "PRODUCTS"."PRODUCTS"."PRODUCT_TYPE" AS "PRODUCTS_PRODUCTS_PRODUCT_TYPE",
+    SUM("SALES"."SALES"."REVENUE") AS "SALES_SALES_REVENUE",
+    SUM("SALES"."SALES"."Gross profit") AS "SALES_SALES_Gross profit"
+FROM
+    "PRODUCTS"."PRODUCTS",
+    "SALES"."SALES"
+WHERE
+    "PRODUCTS"."PRODUCTS"."PRODUCT_NUMBER" = "SALES"."SALES"."Product number"
+GROUP BY 
+    "PRODUCTS"."PRODUCTS"."PRODUCT_NUMBER",
+    "PRODUCTS"."PRODUCTS"."PRODUCT",
+    "PRODUCTS"."PRODUCTS"."PRODUCT_TYPE",
+    "SALES"."SALES"."REVENUE",
+    "SALES"."SALES"."Gross profit"
+```
+
+Click the `Run all` button to execute the SQL.
+
+![cpd-dv-sql-run-all](images/cpd-dv-sql-run-all.png)
+
+### New view
+
+To see our new view, navigate back to the `My virtualized data` panel. You should now see the new view.
+
+![cpd-dv-new-view](images/cpd-dv-new-view.png)
+
+Use the action menu for the view to select the `Preview` option.
+
+<<TODO: screen shots of new view>>
+
+## 8. Build Cognos Analytics dashboard to visualize merged data
+
+<<TODO: Cognos section is WIP>>
 
 ### Add "Data server connection"
 
@@ -456,6 +438,8 @@ Add PRODUCT_TYPE
 Change scatter plot to tree map
 
 ## Associated Videos
+
+<<TODO: REMOVE before release>>
 
 1. Set up Active Directory Server on Windows 2019 Server
     - needed for Cloudera Data Platform
