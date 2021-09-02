@@ -444,6 +444,18 @@ From the `Type` list, select `IBM Big SQL`.
 
 ![cpd-cognos-config-connection](images/cpd-cognos-config-connection.png)
 
+Update the fields to match your `Big SQL` service connection, and click `Test` to try it out.
+
+Note that for our setup, we have SSL enabled and need to pass in our `user ID and password`.
+
+![cpd-cognos-connection-params](images/cpd-cognos-connection-params.png)
+jdbc:db2://bigsql-1623808667998103-jdbc-tls.cp4d.svc.cluster.local:32052/bigsql
+
+If successful, change the name of the connection and click `Save`.
+
+
+
+
 Set up URL to connect to data virtualization service on CPD
 
 You will need to enter uname/pwd to complete
