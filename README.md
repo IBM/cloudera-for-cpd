@@ -97,7 +97,7 @@ Cloud Pak for Data comes pre-packaged with a host of tools and services that can
 
 ## 3. Load data on Cloud Pak for Data
 
-In Cloud Pak for Data we will add data to the Db2 instance. The data [Sales.csv](https://github.com/IBM/cloudera-for-cpd/blob/master/data/Sales.csv) is meant to represent transactions and contains information such as profit, revenue, and sales price.
+In Cloud Pak for Data we will add data to the Db2 instance. The data [Sales.csv](data/Sales.csv) is meant to represent transactions and contains information such as profit, revenue, and sales price.
 
 The Db2 service has been provisioned in our Cloud Pak for Data instance. To view it, from the main Cloud Pak for Data menu, select `Services`, and then click on `Instances`.
 
@@ -109,7 +109,7 @@ Click on the Db2 instance name to bring up the details panel.
 
 Click on the `Open database` button in the top right corner.
 
-From the Db2 instaance `Summary` panel, click `Load Data`.
+From the Db2 instance `Summary` panel, click `Load Data`.
 
 ![cpd-db2-load-option](doc/source/images/cpd-db2-load-option.png)
 
@@ -176,7 +176,7 @@ Click `Create` to create the connection.
 
 ## 5. Load data on Cloudera Data Platform
 
-On the Cloudera side, we will use HDFS to populate our Hive database. This step uses the data set [Products.csv](https://github.com/IBM/cloudera-for-cpd/blob/master/data/Products.csv), which contains information about products (brand, description, price, ID, etc.).
+On the Cloudera side, we will use HDFS to populate our Hive database. This step uses the data set [Products.csv](data/Products.csv), which contains information about products (brand, description, price, ID, etc.).
 
 The first step is to add the data to a users HDFS directory. Download the data where appropriate and run the command below (replace the last value with a directory you have access to).
 
