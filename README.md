@@ -441,7 +441,7 @@ Once you have your connections and data sources configured, create a new dashboa
 
 ## Summary
 
-This tutorial covered examples of how to use `Platform connections` in IBM Cloud Pak for Data to access data sources on Cloud Pak for Data and other platforms, such as Cloudera Data Platform. It details the steps required to create these connections and then show how the data can be transformed and merged using `Data Virtualization`. Lastly, it provides examples of how to import this new data source into Cognos Analytics, where dashboards can be built to pull out insights using multiple visualizations.
+This tutorial covered examples of how to use `Platform connections` in IBM Cloud Pak for Data to access data sources on Cloud Pak for Data and other platforms, such as Cloudera Data Platform. It details the steps required to create a Db2 connection to Cloud Pak for Data data, and a Big SQL connection to access Hive data on Cloudera. It then shows how the data can be combined and transformed using `Data Virtualization`. Lastly, it provides examples of how to import this new virtualized data into Cognos Analytics, where dashboards can be built to pull out insights using multiple visualizations.
 
 ## License
 
