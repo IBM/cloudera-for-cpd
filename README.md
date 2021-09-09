@@ -439,6 +439,10 @@ Once you have your connections and data sources configured, create a new dashboa
 
 ![cpd-cognos-final](doc/source/images/cpd-cognos-final.png)
 
+## Summary
+
+This tutorial covered examples of how to use `Platform connections` in IBM Cloud Pak for Data to access data sources on Cloud Pak for Data and other platforms, such as Cloudera Data Platform. It details the steps required to create these connections and then show how the data can be transformed and merged using `Data Virtualization`. Lastly, it provides examples of how to import this new data source into Cognos Analytics, where dashboards can be built to pull out insights using multiple visualizations.
+
 ## License
 
 This code pattern is licensed under the Apache Software License, Version 2.  Separate third party code objects invoked within this code pattern are licensed by their respective providers pursuant to their own separate licenses. Contributions are subject to the [Developer Certificate of Origin, Version 1.1 (DCO)](https://developercertificate.org/) and the [Apache Software License, Version 2](https://www.apache.org/licenses/LICENSE-2.0.txt).
